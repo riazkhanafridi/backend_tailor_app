@@ -1,0 +1,14 @@
+# Ignore node modules
+node_modules/
+
+# Ignore environment variables file
+.env
+
+# Optional: Ignore logs
+logs/
+*.log
+npm-debug.log*
+
+# Optional: Ignore build folder
+dist/
+build/
