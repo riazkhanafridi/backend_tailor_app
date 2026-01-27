@@ -215,10 +215,10 @@ export const socialLogin = AsyncWrapper(async (req, res, next) => {
     user.profile_image = socialUserData.profile_image;
   }
   
-  // Update email verification status if not already verified
-  if (!user.is_verified_email) {
-    user.is_verified_email = true;
-  }
+  // // Update email verification status if not already verified
+  // if (!user.is_verified_email) {
+  //   user.is_verified_email = true;
+  // }
 
   await user.save();
 

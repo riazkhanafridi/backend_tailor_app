@@ -35,6 +35,10 @@ const Customer = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+        imagePublicId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
 
     // 🔹 Measurements & styles (JSON)
     kameez: {

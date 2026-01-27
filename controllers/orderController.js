@@ -5,37 +5,49 @@ import ErrorHandler from "../utils/errorHandler.js";
 import  SuccessMessage  from "../utils/SuccessMessage.js";
 
 
+
+
 export const addOrder = AsyncWrapper(async (req, res, next) => {
-  try {
-    const { customerId, quantity, price, first_payment, payments, delivery_date, notes, status } = req.body;
+  const { customerId, quantity, price, first_payment, payments, delivery_date, notes, status } = req.body;
 
-    const customer = await Customer.findByPk(customerId);
-
-    if (!customer) return next(new ErrorHandler("Customer not found", 404));
-
-    // Use JSON objects from customer directly
-    const order = await Order.create({
-      customerId,
-      kameez: customer.kameez,
-      shalwar: customer.shalwar,
-      style: customer.style,
-      quantity,
-      price,
-      first_payment,
-      payments: payments ? JSON.parse(payments) : [],
-      delivery_date,
-      notes,
-      status,
-    });
-
-    return SuccessMessage(res, "Order created successfully.", order);
-  } catch (error) {
-    console.error("Error occurred:", error);
-    return next(new ErrorHandler(error.message, 500));
+  // Find customer
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) {
+    return next(new ErrorHandler("Customer not found", 404));
   }
+
+  // Validate that customer has measurements
+  if (!customer.kameez || !customer.shalwar || !customer.style) {
+    return next(new ErrorHandler("Customer measurements are incomplete. Please update customer profile first.", 400));
+  }
+
+  // Parse payments if it's a string
+  let paymentsArray = [];
+  if (payments) {
+    try {
+      paymentsArray = typeof payments === "string" ? JSON.parse(payments) : payments;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid payments format. Must be valid JSON.", 400));
+    }
+  }
+
+  // Create order with customer's measurements
+  const order = await Order.create({
+    customerId,
+    kameez: customer.kameez,
+    shalwar: customer.shalwar,
+    style: customer.style,
+    quantity,
+    price,
+    first_payment: first_payment || 0,
+    payments: paymentsArray,
+    delivery_date,
+    notes: notes || null,
+    status: status || "Pending",
+  });
+
+  return SuccessMessage(res, "Order created successfully.", order);
 });
-
-
 
 
 

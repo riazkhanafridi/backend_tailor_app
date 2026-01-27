@@ -1,5 +1,5 @@
-import AsyncWrapper from "../utils/AsyncWrapper.js";
-import ErrorHandler from "../utils/ErrorHandler.js";
+import AsyncWrapper from "../utils/asyncWrapper.js";
+import ErrorHandler from "../utils/errorHandler.js";
 import Joi from "joi";
 
 const fileSchema = Joi.object({

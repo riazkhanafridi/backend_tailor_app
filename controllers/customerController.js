@@ -6,49 +6,69 @@ import ErrorHandler from "../utils/errorHandler.js";
 import  SuccessMessage  from "../utils/SuccessMessage.js";
 
 
+
 export const addCustomer = AsyncWrapper(async (req, res, next) => {
-  try {
-    const { full_name, nick_name, phone, address, kameez, shalwar, style, notes } = req.body;
+  const { full_name, nick_name, phone, address, kameez, shalwar, style, notes } = req.body;
 
-  
+  let image = null;
+  let imagePublicId = null;
 
-    let image = null;
-    let imagePublicId = null;
-
-    if (req.file) {
-      
+  // Handle image upload
+  if (req.file) {
+    try {
       const uploadResult = await uploadToCloudinary(req.file.buffer, "customers");
       image = uploadResult.secure_url;
       imagePublicId = uploadResult.public_id;
-      
+    } catch (error) {
+      return next(new ErrorHandler("Failed to upload image to Cloudinary", 500));
     }
-
-    // Ensure JSON objects (parse only if string) 
-    const kameezObj = typeof kameez === "string" ? JSON.parse(kameez) : kameez;
-    const shalwarObj = typeof shalwar === "string" ? JSON.parse(shalwar) : shalwar;
-    const styleObj = typeof style === "string" ? JSON.parse(style) : style;
-
-    const customer = await Customer.create({
-      full_name,
-      nick_name,
-      phone,
-      address,
-      image,
-      imagePublicId,
-      kameez: kameezObj,
-      shalwar: shalwarObj,
-      style: styleObj,
-      notes,
-    });
-
-    return SuccessMessage(res, "Customer created successfully.", customer);
-  } catch (error) {
-    console.error("Error occurred:", error);
-    return next(new ErrorHandler(error.message, 500));
   }
+
+  // Parse JSON objects safely
+  let kameezObj = null;
+  let shalwarObj = null;
+  let styleObj = null;
+
+  if (kameez) {
+    try {
+      kameezObj = typeof kameez === "string" ? JSON.parse(kameez) : kameez;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid kameez format. Must be valid JSON.", 400));
+    }
+  }
+
+  if (shalwar) {
+    try {
+      shalwarObj = typeof shalwar === "string" ? JSON.parse(shalwar) : shalwar;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid shalwar format. Must be valid JSON.", 400));
+    }
+  }
+
+  if (style) {
+    try {
+      styleObj = typeof style === "string" ? JSON.parse(style) : style;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid style format. Must be valid JSON.", 400));
+    }
+  }
+
+  // Create customer
+  const customer = await Customer.create({
+    full_name,
+    nick_name,
+    phone,
+    address,
+    image,
+    imagePublicId,
+    kameez: kameezObj,
+    shalwar: shalwarObj,
+    style: styleObj,
+    notes,
+  });
+
+  return SuccessMessage(res, "Customer created successfully.", customer);
 });
-
-
 
 
 
@@ -113,65 +133,70 @@ export const updateProfile = AsyncWrapper(async (req, res, next) => {
   }
 });
 
+
+
 export const updateCustomer = AsyncWrapper(async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { full_name, nick_name, phone, address, kameez, shalwar, style, notes } = req.body;
+  const { id } = req.params;
+  const { full_name, nick_name, phone, address, kameez, shalwar, style, notes } = req.body;
 
-    const customer = await Customer.findByPk(id);
-    if (!customer) return next(new ErrorHandler("Customer not found", 404));
+  const customer = await Customer.findByPk(id);
+  if (!customer) {
+    return next(new ErrorHandler("Customer not found", 404));
+  }
 
-    // Update image if new file is uploaded
-    if (req.file) {
+  // Update image if new file is uploaded
+  if (req.file) {
+    try {
+      // Delete old image from Cloudinary if exists
       if (customer.imagePublicId) {
         await cloudinary.uploader.destroy(customer.imagePublicId);
       }
+      
+      // Upload new image
       const uploadResult = await uploadToCloudinary(req.file.buffer, "customers");
       customer.image = uploadResult.secure_url;
       customer.imagePublicId = uploadResult.public_id;
+    } catch (error) {
+      return next(new ErrorHandler("Failed to upload image to Cloudinary", 500));
     }
-
-    // Only parse if string, otherwise use object directly
-    // customer.kameez = kameez
-    //   ? typeof kameez === "string"
-    //     ? JSON.parse(kameez)
-    //     : kameez
-    //   : customer.kameez;
-
-    // customer.shalwar = shalwar
-    //   ? typeof shalwar === "string"
-    //     ? JSON.parse(shalwar)
-    //     : shalwar
-    //   : customer.shalwar;
-
-    // customer.style = style
-    //   ? typeof style === "string"
-    //     ? JSON.parse(style)
-    //     : style
-    //   : customer.style;
-       // Ensure JSON objects (parse only if string)
-    customer.kameez = kameez ? (typeof kameez === "string" ? JSON.parse(kameez) : kameez) : customer.kameez;
-    console.log(typeof customer.kameez);
-
-    customer.shalwar = shalwar ? (typeof shalwar === "string" ? JSON.parse(shalwar) : shalwar) : customer.shalwar;
-    customer.style = style ? (typeof style === "string" ? JSON.parse(style) : style) : customer.style;
-
-    // Update other fields
-    customer.full_name = full_name || customer.full_name;
-    customer.nick_name = nick_name || customer.nick_name;
-    customer.phone = phone || customer.phone;
-    customer.address = address || customer.address;
-    customer.notes = notes || customer.notes;
-
-    await customer.save();
-
-    return SuccessMessage(res, "Customer updated successfully.", customer);
-  } catch (error) {
-    console.error("Error occurred:", error);
-    return next(new ErrorHandler(error.message, 500));
   }
-});
 
+  // Parse and update JSON fields safely
+  if (kameez) {
+    try {
+      customer.kameez = typeof kameez === "string" ? JSON.parse(kameez) : kameez;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid kameez format. Must be valid JSON.", 400));
+    }
+  }
+
+  if (shalwar) {
+    try {
+      customer.shalwar = typeof shalwar === "string" ? JSON.parse(shalwar) : shalwar;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid shalwar format. Must be valid JSON.", 400));
+    }
+  }
+
+  if (style) {
+    try {
+      customer.style = typeof style === "string" ? JSON.parse(style) : style;
+    } catch (error) {
+      return next(new ErrorHandler("Invalid style format. Must be valid JSON.", 400));
+    }
+  }
+
+  // Update other fields (only if provided)
+  if (full_name) customer.full_name = full_name;
+  if (nick_name) customer.nick_name = nick_name;
+  if (phone) customer.phone = phone;
+  if (address) customer.address = address;
+  if (notes !== undefined) customer.notes = notes; // Allow empty string
+
+  await customer.save();
+
+  return SuccessMessage(res, "Customer updated successfully.", customer);
+});
 
 export const deleteCustomer = AsyncWrapper(async (req, res, next) => {  
     try {
