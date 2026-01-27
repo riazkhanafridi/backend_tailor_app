@@ -111,6 +111,23 @@ export const updateOrder = AsyncWrapper(async (req, res, next) => {
 });
 
 
+export const updateOrderStatus = AsyncWrapper(async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findByPk(id);
+        if (!order) return next(new ErrorHandler("Order not found", 404));
+
+        order.status = status;
+        await order.save();
+
+        return SuccessMessage(res, "Order status updated successfully.", order);
+    } catch (error) {
+        console.error("Error occurred:", error);
+        return next(new ErrorHandler(error.message, 500));
+    }
+}); 
 
 export const deleteOrder = AsyncWrapper(async (req, res, next) => {
     try {   

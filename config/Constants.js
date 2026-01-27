@@ -17,9 +17,14 @@ const envVariables = {
 
 export const USER_ROLES = {
   admin: "ADMIN",
-
   customer: "CUSTOMER",
 
+};
+export const ORDER_STATUS = {
+  pending: "PENDING",
+
+    completed: "COMPLETED",
+    cancelled: "CANCELLED",
 };
 
 export const USER_STATUS = {

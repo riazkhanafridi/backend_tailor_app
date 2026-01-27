@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/dbConnect.js";
 import Customer from "./Customer.js";
+import { ORDER_STATUS } from "../config/Constants.js";
 
 const Order = sequelize.define(
   "Orders",
@@ -73,9 +74,9 @@ const Order = sequelize.define(
     },
 
     status: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM(...Object.values(ORDER_STATUS)),
       allowNull: false,
-      defaultValue: "Pending",
+      defaultValue: ORDER_STATUS.pending,
     },
   },
   {
