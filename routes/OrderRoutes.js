@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { addOrder, deleteOrder, getAllOrders, getOrderById, updateOrder, updateOrderStatus } from "../controllers/orderController.js";
+import { addOrder, deleteOrder, getAllCompletedOrders, getAllOrders, getAllPendingOrders, getOrderById, updateOrder, updateOrderStatus } from "../controllers/orderController.js";
 import auth from "../middlewares/Auth.js";
 import roleAuthorization from "../middlewares/RoleAuthorization.js";
 import validateBody from "../middlewares/Validator.js";
@@ -18,6 +18,8 @@ const router = Router();
 
 router.post("/", auth, validateBody(addUpdateOrderSchema), addOrder);
 router.get("/", auth, getAllOrders);
+router.get("/completed", auth, getAllCompletedOrders);
+router.get("/pending", auth, getAllPendingOrders);
 router.get("/:id", auth, getOrderById);
 router.put(
   "/status/:id",

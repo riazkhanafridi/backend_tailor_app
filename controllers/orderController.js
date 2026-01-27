@@ -129,6 +129,30 @@ export const updateOrderStatus = AsyncWrapper(async (req, res, next) => {
     }
 }); 
 
+export const getAllCompletedOrders = AsyncWrapper(async (req, res, next) => {
+    try {
+        const completedOrders = await Order.findAll({
+            where: { status: 'Completed' }
+        });
+        return SuccessMessage(res, "Completed orders retrieved successfully.", completedOrders);
+    } catch (error) {
+        console.error("Error occurred:", error);
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const getAllPendingOrders = AsyncWrapper(async (req, res, next) => {
+    try {
+        const pendingOrders = await Order.findAll({
+            where: { status: 'Pending' }
+        });
+        return SuccessMessage(res, "Pending orders retrieved successfully.", pendingOrders);
+    } catch (error) {
+        console.error("Error occurred:", error);
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
 export const deleteOrder = AsyncWrapper(async (req, res, next) => {
     try {   
         const { id } = req.params;
