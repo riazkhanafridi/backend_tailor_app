@@ -16,7 +16,6 @@ export const addUser = AsyncWrapper(async (req, res, next) => {
   try {
     const { full_name, password, phone, email } = req.body;
 
-    // Hash password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
